@@ -1,0 +1,78 @@
+swagger: "2.0"
+info:
+  title: License generator
+  description: >
+    redBorder license generator API. 
+  version: 0.1.0
+basePath: /api/v1
+schemes:
+  - http
+  - https
+
+tags:
+  - name: Licenses
+    description: Manage licenses
+
+paths:
+  /licenses:
+    x-swagger-router-controller: licenses
+    post:
+      summary: Request demo license
+      operationId: request
+      parameters:
+        - name: cluster_info
+          in: body
+          description: Request a demo license for a cluster
+          required: true
+          schema:
+            $ref: "#/definitions/Request"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/License"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/Error"
+
+definitions:
+  Request:
+    required:
+      - cluster_uuid
+    properties:
+      cluster_uuid:
+        type: string
+
+  License:
+    type: object
+    properties:
+      Info:
+        $ref: '#/definitions/Info'
+      encoded_info:
+        type: string
+      signature:
+        type: string
+      created_at:
+        type: string
+  
+  Info:
+    type: object
+    properties:
+      uuid:
+        type: string
+      expire_at:
+        type: string
+      limit_bytes:
+        type: integer
+      cluster_uuid:
+        type: string
+      sensors:
+        type: object
+  
+  Error:
+    required:
+      - message
+    properties:
+      message:
+        type: string
