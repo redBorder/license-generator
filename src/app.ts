@@ -17,19 +17,42 @@
 
 import * as express from "express";
 import * as log4js from "log4js";
+import "reflect-metadata";
 import * as SwaggerExpress from "swagger-express-mw";
+import { createConnection } from "typeorm";
+import { License } from "./entity/license";
 
 import config from "./config";
 
 const logger = log4js.getLogger("[app]");
 const app = express();
 
-SwaggerExpress.create(config.api, (err, swaggerExpress) => {
-  if (err) { throw err; }
+createConnection({
+  autoSchemaSync: true,
+  driver: {
+    database: config.db.database,
+    host: config.db.host,
+    password: config.db.password,
+    port: config.db.port,
+    type: "mariadb",
+    username: config.db.username,
+  },
+  entities: [License],
+}).then((connection) => {
+  logger.info("Connected to the database");
 
-  swaggerExpress.register(app);
-  app.listen(config.api.port, () =>
-    logger.info(`Listen on ${config.api.port}`));
-});
+  app.use((req: any, res, next) => {
+    req.dbConnection = connection;
+    next();
+  });
+
+  SwaggerExpress.create(config.api, (err, swaggerExpress) => {
+    if (err) { throw err; }
+
+    swaggerExpress.register(app);
+    app.listen(config.api.port, () =>
+      logger.info(`Listen on ${config.api.port}`));
+  });
+}).catch((error) => logger.error(error));
 
 export default app;

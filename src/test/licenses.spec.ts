@@ -1,3 +1,20 @@
+// License generator API
+// Copyright (C) 2017  Eneo Tecnología
+// Author: Diego Fernández Barrera
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import { expect } from "chai";
 import { suite, test } from "mocha-typescript";
 
@@ -49,12 +66,13 @@ class LicensesTest {
   public encodeInfo() {
     const baseLicense = {
       encoded_info: "",
-      info: { message: "Hello world" },
+      id: "0",
+      info: { uuid: "Hello world" },
       signature: "",
     };
     const license = encodeInfo(baseLicense);
     expect(license.encoded_info)
-      .to.eq("eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==");
+      .to.eq("eyJ1dWlkIjoiSGVsbG8gd29ybGQifQ==");
   }
 
   @test("sign a license using a rsa key")
@@ -63,7 +81,8 @@ class LicensesTest {
 
     const baseLicense = {
       encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
-      info: { message: "Hello world" },
+      id: "0",
+      info: { uuid: "Hello world" },
       signature: "",
     };
     const license = addSignature(key, baseLicense);
@@ -89,7 +108,8 @@ class LicensesTest {
   public sendLicense() {
     const license = {
       encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
-      info: { message: "Hello world" },
+      id: "0",
+      info: { uuid: "Hello world" },
       signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
     };
     const res = { send: () => { return; } };
@@ -106,7 +126,8 @@ class LicensesTest {
   public printLicense() {
     const license = {
       encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
-      info: { message: "Hello world" },
+      id: "0",
+      info: { uuid: "Hello world" },
       signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
     };
     const logger = { debug: () => { return; } };
@@ -119,28 +140,28 @@ class LicensesTest {
     mock.verify();
   }
 
-  @test("handle a request")
-  public request() {
-    const license = {
-      encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
-      info: { message: "Hello world" },
-      signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
-    };
-
-    const req = {
-      swagger: {
-        params: { cluster_info: { value: { cluster_uuid: "test_uuid" } } },
-      },
-    };
-
-    const res = { send: () => { return; } };
-    const mock = sinon.mock(res);
-
-    const opts = {
-      logger: Maybe.Nothing(),
-      pem: new NodeRSA(privateKey),
-    };
-
-    requestHandler(opts, req, res);
-  }
+  // @test("handle a request")
+  // public request() {
+  //   const license = {
+  //     encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
+  //     info: { message: "Hello world" },
+  //     signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
+  //   };
+  //
+  //   const req = {
+  //     swagger: {
+  //       params: { cluster_info: { value: { cluster_uuid: "test_uuid" } } },
+  //     },
+  //   };
+  //
+  //   const res = { send: () => { return; } };
+  //   const mock = sinon.mock(res);
+  //
+  //   const opts = {
+  //     logger: Maybe.Nothing(),
+  //     pem: new NodeRSA(privateKey),
+  //   };
+  //
+  //   requestHandler(opts, req, res);
+  // }
 }

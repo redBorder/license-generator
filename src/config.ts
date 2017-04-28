@@ -19,14 +19,28 @@ import * as joi from "joi";
 import * as NodeRSA from "node-rsa";
 
 const envVarsSchema = joi.object({
+  DB_DATABASE: joi.string()
+    .default("licenses"),
+  DB_HOST: joi.string()
+    .default("mariadb"),
+  DB_PASSWORD: joi.string()
+    .default("qwerty"),
+  DB_PORT: joi.string()
+    .default(3306),
+  DB_USERNAME: joi.string()
+    .default("root"),
+
   LOG_LEVEL: joi.string()
     .allow(["error", "warn", "info", "debug", "trace"])
     .default("info"),
+
   NODE_ENV: joi.string()
     .allow(["development", "production", "test"])
     .default("development"),
+
   PORT: joi.number()
     .default(3000),
+
   PRIVATE_KEY: joi.string()
     .allow([""])
     .default(""),
@@ -42,6 +56,13 @@ const config = {
     configDir: ".",
     port: envVars.PORT,
     swaggerFile: "api.yaml",
+  },
+  db: {
+    database: envVars.DB_DATABASE,
+    host: envVars.DB_HOST,
+    password: envVars.DB_PASSWORD,
+    port: envVars.DB_PORT,
+    username: envVars.DB_USERNAME,
   },
   env: envVars.NODE_ENV,
   key: envVars.PRIVATE_KEY ?
