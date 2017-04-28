@@ -75,14 +75,14 @@ class LicensesTest {
 
   @test("get Unix epoch from a date")
   public getUnixEpoch() {
-    const date = new Date(1990, 6, 29, 0, 0, 0, 0);
-    expect(getUnixEpoch(date)).to.eq(649202400);
+    const date = new Date("1990-04-29T00:00:00");
+    expect(getUnixEpoch(date)).to.eq(641347200);
   }
 
   @test("add 30 days to a given date")
   public add30Days() {
-    const date = new Date(1990, 6, 29, 0, 0, 0, 0);
-    expect(add30Days(date).getTime() / 1000).to.eq(651794400);
+    const date = new Date("1990-04-29T00:00:00");
+    expect(add30Days(date).getTime() / 1000).to.eq(643939200);
   }
 
   @test("send a license")
