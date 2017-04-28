@@ -2,30 +2,45 @@ swagger: "2.0"
 info:
   title: License generator
   description: >
-    redBorder license generator API. 
+    redborder license generator API.
+
+    The API can be used to request demo licenses valid for 30 days for a
+    cluster. **Only one license per cluster is allowed**.
   version: 0.1.0
+  contact:
+    name: redborder
+    url: https://redborder.com
+    email: info@redborder.com
+  license:
+    name: GNU Affero General Public License
+    url: https://www.gnu.org/licenses/agpl-3.0.txt
+
 basePath: /api/v1
 schemes:
   - http
   - https
-
+consumes:
+  - application/json
+produces:
+  - application/json
 tags:
-  - name: Licenses
+  - name: License
     description: Manage licenses
 
 paths:
   /licenses:
     x-swagger-router-controller: licenses
     post:
+      tags: [License]
       summary: Request demo license
       operationId: request
       parameters:
         - name: cluster_info
           in: body
-          description: Request a demo license for a cluster
+          description: Request a demo license valid for 30 days for a cluster.
           required: true
           schema:
-            $ref: "#/definitions/Request"
+            $ref: "#/definitions/LicenseRequest"
       responses:
         "200":
           description: Success
@@ -34,45 +49,61 @@ paths:
         default:
           description: Error
           schema:
-            $ref: "#/definitions/Error"
+            $ref: "#/definitions/ErrorResponse"
 
 definitions:
-  Request:
+  LicenseRequest:
+    type: object
     required:
       - cluster_uuid
     properties:
       cluster_uuid:
         type: string
+        description: >
+          UUID of the cluster where the license is allowed. One demo license
+          per cluster is allwed.
 
   License:
     type: object
     properties:
       Info:
-        $ref: '#/definitions/Info'
+        $ref: '#/definitions/LicenseInfo'
       encoded_info:
         type: string
+        description: The field "info" encoded on base64.
       signature:
         type: string
+        description: The signature of the "encoded_info" field encoded on base64.
       created_at:
         type: string
-  
-  Info:
+        description: When the license was generated.
+
+  LicenseInfo:
     type: object
     properties:
       uuid:
         type: string
-      expire_at:
-        type: string
-      limit_bytes:
-        type: integer
+        description: UUID of the license.
       cluster_uuid:
         type: string
+        description: UUID of the cluster where the license is allowed.
+      expire_at:
+        type: string
+        description: Unix timestamp indicating when the license expires.
+      limit_bytes:
+        type: integer
+        description: Max number of bytes allowed to send every period.
       sensors:
         type: object
-  
-  Error:
+        description: >
+          Map with the number of sensors allowed for every model in
+          the form of "<sensor_id>":<number of sensos allowed>.
+
+  ErrorResponse:
+    type: object
     required:
       - message
     properties:
       message:
         type: string
+        description: Information about the error.
