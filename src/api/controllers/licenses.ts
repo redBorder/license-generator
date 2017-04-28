@@ -16,7 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import * as log4js from "log4js";
-import * as NodeRSA from "node-rsa";
 import * as R from "ramda";
 import * as rambdaFantasy from "ramda-fantasy";
 import * as util from "util";
@@ -28,8 +27,6 @@ const IO = rambdaFantasy.IO;
 const Maybe = rambdaFantasy.Maybe;
 
 const logger = log4js.getLogger("[licenses]");
-
-const pem = new NodeRSA(config.key.replace(/\\n/g, "\n"));
 
 interface ILicense {
   info: object;
@@ -44,18 +41,6 @@ interface IKey {
 /////////////
 // Helpers //
 /////////////
-
-const sensorList = {
-  199: 100,
-  191: 100,
-  999: 100,
-  217: 100,
-  187: 100,
-  227: 100,
-  219: 100,
-  221: 100,
-  223: 100,
-};
 
 // safeURLBase64Encode :: string -> string
 export const safeURLBase64Encode = (data: string): string =>
@@ -106,9 +91,9 @@ export const getUnixEpoch = (date: Date): number =>
 // computeExpireTimestamp :: Date -> number
 export const computeExpireTimestamp = R.compose(getUnixEpoch, add30Days);
 
-//////////////
-// Handlers //
-//////////////
+//////////////////////////
+// High order functions //
+//////////////////////////
 
 export const requestHandler = R.curry((opts, req, res) => {
   const buildLicense = R.pipe(
@@ -118,7 +103,8 @@ export const requestHandler = R.curry((opts, req, res) => {
     R.assocPath(["info", "expire_at"], computeExpireTimestamp(new Date())),
     R.assocPath(["info", "limit_bytes"], 9223372036854775000),
     R.assocPath(["info", "sensors"], opts.sensorList),
-    R.assocPath(["created_at"], new Date().toISOString()));
+    R.assocPath(["created_at"], new Date().toISOString()),
+  );
 
   const signLicense = R.pipe(
     encodeInfo,
@@ -131,6 +117,22 @@ export const requestHandler = R.curry((opts, req, res) => {
   R.pipe(buildLicense, signLicense)({});
 });
 
+/////////////////////
+// Impure handlers //
+/////////////////////
+
 export const request = requestHandler({
-  pem, logger: Maybe.of(logger), sensorList,
+  logger: Maybe.of(logger),
+  pem: config.key,
+  sensors: {
+    199: 100,
+    191: 100,
+    999: 100,
+    217: 100,
+    187: 100,
+    227: 100,
+    219: 100,
+    221: 100,
+    223: 100,
+  },
 });

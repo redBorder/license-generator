@@ -5,7 +5,16 @@ import * as NodeRSA from "node-rsa";
 import * as rambdaFantasy from "ramda-fantasy";
 import * as sinon from "sinon";
 
-import * as licenses from "../api/controllers/licenses";
+import {
+  add30Days,
+  addSignature,
+  encodeInfo,
+  getUnixEpoch,
+  printLicense,
+  requestHandler,
+  safeURLBase64Encode,
+  sendLicense,
+} from "../api/controllers/licenses";
 
 const Maybe = rambdaFantasy.Maybe;
 
@@ -28,7 +37,7 @@ class LicensesTest {
 
   @test("encode text using base64")
   public safeURLBase64Encode() {
-    const encoded = licenses.safeURLBase64Encode(
+    const encoded = safeURLBase64Encode(
       "Lorem ipsum dolor sit amet, consectetur adipisicing elit, " +
       "mollit anim id est laborum.");
     expect(encoded).to.eq(
@@ -43,7 +52,7 @@ class LicensesTest {
       info: { message: "Hello world" },
       signature: "",
     };
-    const license = licenses.encodeInfo(baseLicense);
+    const license = encodeInfo(baseLicense);
     expect(license.encoded_info)
       .to.eq("eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==");
   }
@@ -57,7 +66,7 @@ class LicensesTest {
       info: { message: "Hello world" },
       signature: "",
     };
-    const license = licenses.addSignature(key, baseLicense);
+    const license = addSignature(key, baseLicense);
     expect(license.signature)
       .to.eq("NBLguIM2kdTig9ZnKfgFbY-Ghra4x4wu9akEoQrIbH8bC5btrpZekHcYLbAxPF" +
       "1pA8gCieU8v4uz9_C2jcjZJrPfqyLcgZmvGk27ZEiTO6uZQs_XwmwprYxuWpGHhFkRerM" +
@@ -67,13 +76,13 @@ class LicensesTest {
   @test("get Unix epoch from a date")
   public getUnixEpoch() {
     const date = new Date(1990, 6, 29, 0, 0, 0, 0);
-    expect(licenses.getUnixEpoch(date)).to.eq(649202400);
+    expect(getUnixEpoch(date)).to.eq(649202400);
   }
 
   @test("add 30 days to a given date")
   public add30Days() {
     const date = new Date(1990, 6, 29, 0, 0, 0, 0);
-    expect(licenses.add30Days(date).getTime() / 1000).to.eq(651794400);
+    expect(add30Days(date).getTime() / 1000).to.eq(651794400);
   }
 
   @test("send a license")
@@ -88,7 +97,7 @@ class LicensesTest {
     const mock = sinon.mock(res);
     mock.expects("send").calledWith(license);
 
-    licenses.sendLicense(res, license).runIO();
+    sendLicense(res, license).runIO();
 
     mock.verify();
   }
@@ -105,12 +114,12 @@ class LicensesTest {
     const mock = sinon.mock(logger);
     mock.expects("debug").calledWith(license);
 
-    licenses.printLicense(Maybe.of(logger), license).runIO();
+    printLicense(Maybe.of(logger), license).runIO();
 
     mock.verify();
   }
 
-  @test("full pipeline")
+  @test("handle a request")
   public request() {
     const license = {
       encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
@@ -132,6 +141,6 @@ class LicensesTest {
       pem: new NodeRSA(privateKey),
     };
 
-    licenses.requestHandler(opts, req, res);
+    requestHandler(opts, req, res);
   }
 }

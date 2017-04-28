@@ -4,7 +4,8 @@
     "target": "es6",
     "module": "commonjs",
     "experimentalDecorators": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "sourceMap": true
   },
   "include": [
     "src/**/*.ts"
