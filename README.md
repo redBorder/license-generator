@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/redBorder/license-generator.svg?branch=master)](https://travis-ci.org/redBorder/license-generator)
+[![Coverage Status](https://coveralls.io/repos/github/redBorder/license-generator/badge.svg?branch=master)](https://coveralls.io/github/redBorder/license-generator?branch=master)
+[![Documentation](https://img.shields.io/badge/api-documentation-blue.svg)](https://redborder.github.io/license-generator/)
+
 # License Generator
 
 ## Overview
