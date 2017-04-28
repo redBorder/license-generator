@@ -16,36 +16,39 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import * as joi from "joi";
+import * as NodeRSA from "node-rsa";
 
 const envVarsSchema = joi.object({
+  LOG_LEVEL: joi.string()
+    .allow(["error", "warn", "info", "debug", "trace"])
+    .default("info"),
   NODE_ENV: joi.string()
     .allow(["development", "production", "test"])
     .default("development"),
   PORT: joi.number()
     .default(3000),
-  LOG_LEVEL: joi.string()
-    .allow(["error", "warn", "info", "debug", "trace"])
-    .default("info"),
   PRIVATE_KEY: joi.string()
-    .required(),
+    .allow([""])
+    .default(""),
 }).unknown()
   .required();
 
 const { error, value: envVars } = joi.validate(process.env, envVarsSchema);
-if (error) { throw new Error(`Config validation error: ${error.message}`) }
+if (error) { throw new Error(`Config validation error: ${error.message}`); }
 
 const config = {
-  env: envVars.NODE_ENV,
-  logger: {
-    level: envVars.LOG_LEVEL,
-  },
   api: {
     appRoot: ".",
     configDir: ".",
     port: envVars.PORT,
     swaggerFile: "api.yaml",
   },
-  key: envVars.PRIVATE_KEY,
+  env: envVars.NODE_ENV,
+  key: envVars.PRIVATE_KEY ?
+    new NodeRSA(envVars.PRIVATE_KEY.replace(/\\n/g, "\n")) : undefined,
+  logger: {
+    level: envVars.LOG_LEVEL,
+  },
 };
 
 export default config;

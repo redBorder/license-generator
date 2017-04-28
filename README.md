@@ -5,6 +5,9 @@
 This is the **redBorder License Generator**. It's a simple script for generating
 demo licenses using a RESTful API.
 
+The API can be used to request demo licenses valid for 30 days for a
+cluster. **Only one license per cluster is allowed**.
+
 ## Install
 
 Just clone the repo and then:
@@ -12,6 +15,12 @@ Just clone the repo and then:
 ```bash
 npm install
 npm run build
+```
+
+### Using Docker
+
+```bash
+docker run -d -p 3000:3000 redBorder/license-generator
 ```
 
 ## Usage

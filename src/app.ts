@@ -15,17 +15,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import * as SwaggerExpress from "swagger-express-mw";
 import * as express from "express";
 import * as log4js from "log4js";
+import * as SwaggerExpress from "swagger-express-mw";
 
 import config from "./config";
 
-const logger = log4js.getLogger('[app]');
+const logger = log4js.getLogger("[app]");
 const app = express();
 
 SwaggerExpress.create(config.api, (err, swaggerExpress) => {
-  if (err) throw err;
+  if (err) { throw err; }
 
   swaggerExpress.register(app);
   app.listen(config.api.port, () =>
