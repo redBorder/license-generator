@@ -15,22 +15,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { expect } from "chai";
+import * as chai from "chai";
+import * as chaiAsPromised from "chai-as-promised";
 import { suite, test } from "mocha-typescript";
-
 import * as NodeRSA from "node-rsa";
 import * as rambdaFantasy from "ramda-fantasy";
 import * as sinon from "sinon";
+
+chai.use(chaiAsPromised);
+const expect = chai.expect;
+
+const IO = rambdaFantasy.IO;
+const Either = rambdaFantasy.Either;
 
 import {
   add30Days,
   addSignature,
   encodeInfo,
+  findLicense,
   getUnixEpoch,
   printLicense,
   requestHandler,
   safeURLBase64Encode,
+  sendError,
   sendLicense,
+  storeOnDB,
 } from "../api/controllers/licenses";
 
 const Maybe = rambdaFantasy.Maybe;
@@ -140,28 +149,126 @@ class LicensesTest {
     mock.verify();
   }
 
-  // @test("handle a request")
-  // public request() {
-  //   const license = {
-  //     encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
-  //     info: { message: "Hello world" },
-  //     signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
-  //   };
-  //
-  //   const req = {
-  //     swagger: {
-  //       params: { cluster_info: { value: { cluster_uuid: "test_uuid" } } },
-  //     },
-  //   };
-  //
-  //   const res = { send: () => { return; } };
-  //   const mock = sinon.mock(res);
-  //
-  //   const opts = {
-  //     logger: Maybe.Nothing(),
-  //     pem: new NodeRSA(privateKey),
-  //   };
-  //
-  //   requestHandler(opts, req, res);
-  // }
+  @test("send an error")
+  public sendError() {
+    const res = { send: () => { return; } };
+    const mock = sinon.mock(res);
+
+    mock.expects("send").calledWith("Hello");
+
+    sendError(res, "Hello").runIO();
+
+    mock.verify();
+  }
+
+  @test("find a license on the database which exists")
+  public findLicenseFound() {
+    const license = {
+      encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
+      id: "0",
+      info: { uuid: "Hello world" },
+      signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
+    };
+
+    const repository = {
+      findOneById: () => new Promise((resolve) => resolve(license)),
+    };
+    const mock = sinon.mock(repository);
+    const connection = { getRepository: () => repository };
+
+    expect(findLicense(undefined, connection, license).runIO())
+      .to.eventually.deep.equal(Either.Left(license));
+  }
+
+  @test("find a license on the database which does not exists")
+  public findLicenseNotFound() {
+    const license = {
+      encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
+      id: "0",
+      info: { uuid: "Hello world" },
+      signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
+    };
+    const repository = {
+      findOneById: () => new Promise((resolve) => resolve(undefined)),
+    };
+    const mock = sinon.mock(repository);
+    const connection = { getRepository: () => repository };
+
+    expect(findLicense(undefined, connection, license).runIO())
+      .to.eventually.deep.equal(Either.Right(license));
+  }
+
+  @test("store a license on the database")
+  public storeOnDB() {
+    const repository = {
+      persist: () => new Promise((resolve) => resolve(42)),
+    };
+    const mock = sinon.mock(repository);
+    const connection = { getRepository: () => repository };
+
+    expect(storeOnDB(undefined, connection, undefined).runIO())
+      .to.eventually.equal(42);
+  }
+
+  @test("handle a request from a new cluster")
+  public request() {
+    const repository = {
+      findOneById: () => new Promise((resolve) => resolve(undefined)),
+      persist: () => new Promise((resolve) => resolve(42)),
+    };
+    const connection = { getRepository: () => repository };
+    const repositoryMock = sinon.mock(repository);
+    const res = { send: () => { return; } };
+    const resMock = sinon.mock(res);
+
+    const req = {
+      dbConnection: connection,
+      swagger: {
+        params: { cluster_info: { value: { cluster_uuid: "test_uuid" } } },
+      },
+    };
+
+    const opts = {
+      key: new NodeRSA(privateKey),
+      logger: Maybe.Nothing(),
+    };
+
+    requestHandler(opts, req, res);
+
+    resMock.verify();
+  }
+
+  @test("handle a request from the same cluster")
+  public requestAgain() {
+    const license = {
+      encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
+      id: "0",
+      info: { uuid: "Hello world" },
+      signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
+    };
+    const repository = {
+      findOneById: () => new Promise((resolve) => resolve(license)),
+      persist: () => new Promise((resolve) => resolve(42)),
+    };
+    const connection = { getRepository: () => repository };
+    const repositoryMock = sinon.mock(repository);
+    const res = { send: () => { return; } };
+    const resMock = sinon.mock(res);
+
+    const req = {
+      dbConnection: connection,
+      swagger: {
+        params: { cluster_info: { value: { cluster_uuid: "test_uuid" } } },
+      },
+    };
+
+    const opts = {
+      key: new NodeRSA(privateKey),
+      logger: Maybe.Nothing(),
+    };
+
+    requestHandler(opts, req, res);
+
+    resMock.verify();
+  }
 }
