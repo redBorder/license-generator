@@ -18,21 +18,20 @@
 import * as log4js from "log4js";
 import * as R from "ramda";
 import * as rambdaFantasy from "ramda-fantasy";
+import * as SwaggerExpress from "swagger-express-mw";
 import * as util from "util";
 import * as uuid from "uuid/v4";
 
 import config from "../../config";
+import { catchP, then } from "../../util";
+
+import { License } from "../../entity/license";
 
 const IO = rambdaFantasy.IO;
 const Maybe = rambdaFantasy.Maybe;
+const Either = rambdaFantasy.Either;
 
 const logger = log4js.getLogger("[licenses]");
-
-interface ILicense {
-  info: object;
-  encoded_info: string;
-  signature: string;
-}
 
 interface IKey {
   sign(data: string): string;
@@ -50,31 +49,39 @@ export const safeURLBase64Encode = (data: string): string =>
     .replace(/\+/g, "-");
 
 // encodeInfo :: License -> License
-export const encodeInfo = (license: ILicense): ILicense =>
+export const encodeInfo = (license: License): License =>
   R.assoc(
     "encoded_info",
     safeURLBase64Encode(JSON.stringify(license.info)),
     license);
 
 // addSignature :: License -> License
-export const addSignature = R.curry((key: IKey, license: ILicense): ILicense =>
+export const addSignature = R.curry((key: IKey, license: License): License =>
   R.assoc(
     "signature",
     safeURLBase64Encode(key.sign(license.encoded_info)),
-    license));
+    license),
+);
 
 // sendLicense :: Responder -> License -> IO License
-export const sendLicense = R.curry((res, license: ILicense) => IO(() => {
+export const sendLicense = R.curry((res, license: License) => IO(() => {
   return res.send(license), license;
 }));
 
-// printLicense :: Logger -> License -> IO ()
-export const printLicense = R.curry((maybeLogger, license: ILicense) => IO(() =>
+// sendError :: Responder -> License -> IO License
+export const sendError = R.curry((res, error: string) => IO(() =>
+  res.send({ message: error }),
+));
+
+// printLicense :: Logger -> License -> IO License
+export const printLicense = R.curry((maybeLogger, license: License) => IO(() => {
   maybeLogger.map((log) =>
     log.debug(
       `Generated new license: \n${util.inspect(license, { colors: true })}`,
-    )),
-));
+    ));
+
+  return license;
+}));
 
 // addDays :: number -> Date -> Date
 export const addDays = R.curry((days: number, date: Date): Date =>
@@ -88,33 +95,65 @@ export const add30Days = addDays(30);
 export const getUnixEpoch = (date: Date): number =>
   Math.floor(date.getTime() / 1000);
 
-// computeExpireTimestamp :: Date -> number
-export const computeExpireTimestamp = R.compose(getUnixEpoch, add30Days);
+// findLicense :: DBConnection -> string -> IO Promise(Either(Entity, Entity))
+export const findLicense = R.curry((entity, connection, license: License) =>
+  IO(() => {
+    return new Promise((resolve, reject) =>
+      connection
+        .getRepository(entity)
+        .findOneById(license.id)
+        .then((exists) =>
+          resolve(exists ? Either.Left(license) : Either.Right(license)))
+        .catch(reject));
+  }));
+
+// storeOnDb :: Entity -> DBConnection -> License -> IO Promise(License)
+export const storeOnDB: any = R.curry((entity, connection, license) => IO(() =>
+  connection.getRepository(entity).persist(license),
+));
 
 //////////////////////////
 // High order functions //
 //////////////////////////
 
+// computeExpireTimestamp :: Date -> number
+export const computeExpireTimestamp = R.compose(getUnixEpoch, add30Days);
+
 export const requestHandler = R.curry((opts, req, res) => {
-  const buildLicense = R.pipe(
-    R.assocPath(["info", "uuid"], uuid()),
-    R.assocPath(["info", "cluster_uuid"],
-      req.swagger.params.cluster_info.value.cluster_uuid),
-    R.assocPath(["info", "expire_at"], computeExpireTimestamp(new Date())),
-    R.assocPath(["info", "limit_bytes"], 9223372036854775000),
-    R.assocPath(["info", "sensors"], opts.sensorList),
-    R.assocPath(["created_at"], new Date().toISOString()),
-  );
+  R.pipe(
+    R.pipe(
+      R.assocPath(["id"], req.swagger.params.cluster_info.value.cluster_uuid),
+      R.assocPath(["info", "uuid"], uuid()),
+      R.assocPath(["info", "cluster_uuid"],
+        req.swagger.params.cluster_info.value.cluster_uuid),
+      R.assocPath(["info", "expire_at"], computeExpireTimestamp(new Date())),
+      R.assocPath(["info", "limit_bytes"], 9223372036854775000),
+      R.assocPath(["info", "sensors"], opts.sensors),
+      R.assocPath(["created_at"], new Date().toISOString()),
 
-  const signLicense = R.pipe(
-    encodeInfo,
-    addSignature(opts.pem),
-    sendLicense(res),
-    R.chain(printLicense(opts.logger)),
-    IO.runIO.bind(this),
-  );
+      findLicense(opts.entity, req.dbConnection),
+      IO.runIO.bind(this),
+    ),
 
-  R.pipe(buildLicense, signLicense)({});
+    // For either.Right genereate a license
+    R.pipe(
+      then(R.map(encodeInfo)),
+      then(R.map(addSignature(opts.key))),
+      then(R.chain(printLicense(opts.logger))),
+      then(R.chain(sendLicense(res))),
+      then(R.chain(storeOnDB(opts.entity, req.dbConnection))),
+    ),
+
+    // For either.Left return an error
+    R.pipe(
+      then((either) => either.isLeft
+        ? sendError(res, "Already generated a demo license for this cluster")
+        : either),
+    ),
+
+    then(IO.runIO.bind(this)),
+    catchP(logger.error.bind(logger)),
+  )(new License());
 });
 
 /////////////////////
@@ -122,8 +161,9 @@ export const requestHandler = R.curry((opts, req, res) => {
 /////////////////////
 
 export const request = requestHandler({
+  entity: License,
+  key: config.key,
   logger: Maybe.of(logger),
-  pem: config.key,
   sensors: {
     199: 100,
     191: 100,
