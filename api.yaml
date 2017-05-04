@@ -23,7 +23,6 @@ consumes:
   - application/json
 produces:
   - application/json
-  - text/html
 tags:
   - name: License
     description: Manage licenses
@@ -46,7 +45,7 @@ paths:
         "200":
           description: Success
           schema:
-            $ref: "#/definitions/EncodedLicense"
+            $ref: "#/definitions/LicenseResponse"
         default:
           description: Error
           schema:
@@ -64,9 +63,14 @@ definitions:
           UUID of the cluster where the license is allowed. One demo license
           per cluster is allwed.
 
-  EncodedLicense:
-    type: string
-    description: Base64 encoded license.
+  LicenseResponse:
+    type: object
+    required:
+      - license
+    properties:
+      license:
+        type: string
+        description: Base64 encoded license.
 
   ErrorResponse:
     type: object

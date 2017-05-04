@@ -112,7 +112,7 @@ export const storeOnDB: any = R.curry((entity, connection, license) => IO(() => 
   return connection.getRepository(entity).persist(license), license;
 }));
 
-const objToString = (obj) => obj.toString();
+const fromValue = R.curry((key, value) => R.assoc(key, value, {}));
 
 //////////////////////////
 // High order functions //
@@ -148,6 +148,7 @@ export const requestHandler = R.curry((opts, req, res) => {
           R.dissoc("id"),
           JSON.stringify,
           safeURLBase64Encode,
+          fromValue("license"),
           sendResponse(res),
         )),
       )),
