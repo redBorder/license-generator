@@ -63,9 +63,9 @@ export const addSignature = R.curry((key: IKey, license: License): License =>
     license),
 );
 
-// sendLicense :: Responder -> License -> IO License
-export const sendLicense = R.curry((res, license: License) => IO(() => {
-  return res.send(license), license;
+// sendLicense :: Responder -> string -> IO string
+export const sendResponse = R.curry((res, message) => IO(() => {
+  return res.send(message), message;
 }));
 
 // sendError :: Responder -> License -> IO License
@@ -108,9 +108,11 @@ export const findLicense = R.curry((entity, connection, license: License) =>
   }));
 
 // storeOnDb :: Entity -> DBConnection -> License -> IO Promise(License)
-export const storeOnDB: any = R.curry((entity, connection, license) => IO(() =>
-  connection.getRepository(entity).persist(license),
-));
+export const storeOnDB: any = R.curry((entity, connection, license) => IO(() => {
+  return connection.getRepository(entity).persist(license), license;
+}));
+
+const objToString = (obj) => obj.toString();
 
 //////////////////////////
 // High order functions //
@@ -140,9 +142,15 @@ export const requestHandler = R.curry((opts, req, res) => {
       then(R.map(encodeInfo)),
       then(R.map(addSignature(opts.key))),
       then(R.chain(printLicense(opts.logger))),
-      then(R.chain(sendLicense(res))),
       then(R.chain(storeOnDB(opts.entity, req.dbConnection))),
-    ),
+      then(R.chain(
+        R.pipe(
+          R.dissoc("id"),
+          JSON.stringify,
+          safeURLBase64Encode,
+          sendResponse(res),
+        )),
+      )),
 
     // For either.Left return an error
     R.pipe(

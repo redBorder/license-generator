@@ -23,6 +23,7 @@ consumes:
   - application/json
 produces:
   - application/json
+  - text/html
 tags:
   - name: License
     description: Manage licenses
@@ -45,7 +46,7 @@ paths:
         "200":
           description: Success
           schema:
-            $ref: "#/definitions/License"
+            $ref: "#/definitions/EncodedLicense"
         default:
           description: Error
           schema:
@@ -63,41 +64,9 @@ definitions:
           UUID of the cluster where the license is allowed. One demo license
           per cluster is allwed.
 
-  License:
-    type: object
-    properties:
-      Info:
-        $ref: '#/definitions/LicenseInfo'
-      encoded_info:
-        type: string
-        description: The field "info" encoded on base64.
-      signature:
-        type: string
-        description: The signature of the "encoded_info" field encoded on base64.
-      created_at:
-        type: string
-        description: When the license was generated.
-
-  LicenseInfo:
-    type: object
-    properties:
-      uuid:
-        type: string
-        description: UUID of the license.
-      cluster_uuid:
-        type: string
-        description: UUID of the cluster where the license is allowed.
-      expire_at:
-        type: string
-        description: Unix timestamp indicating when the license expires.
-      limit_bytes:
-        type: integer
-        description: Max number of bytes allowed to send every period.
-      sensors:
-        type: object
-        description: >
-          Map with the number of sensors allowed for every model in
-          the form of "<sensor_id>":<number of sensos allowed>.
+  EncodedLicense:
+    type: string
+    description: Base64 encoded license.
 
   ErrorResponse:
     type: object
