@@ -65,8 +65,6 @@ definitions:
 
   LicenseResponse:
     type: object
-    required:
-      - license
     properties:
       license:
         type: string
