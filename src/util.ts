@@ -16,6 +16,17 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import * as R from "ramda";
+import * as rambdaFantasy from "ramda-fantasy";
+
+const IO = rambdaFantasy.IO;
+
+export interface IContext {
+  dbConnection: any;
+  entity: any;
+  key: any;
+  logger: any;
+  sensors: object;
+}
 
 // then :: Fn -> Promise -> Promise
 export const then: any = R.curry((fn, promise: Promise<any>) =>
@@ -24,3 +35,10 @@ export const then: any = R.curry((fn, promise: Promise<any>) =>
 // catchP :: Fn -> Promise -> Promise
 export const catchP: any = R.curry((fn, promise: Promise<any>) =>
   promise.catch((obj) => fn(obj)));
+
+// runIO :: IO a -> a
+export const runIO: any = (io) => io.runIO();
+
+// errorLog :: Logger -> string -> IO ()
+export const errorLog: any = R.curry((logger, message) => IO(() =>
+  logger.map(logger.error(message))));

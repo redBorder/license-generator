@@ -42,8 +42,7 @@ const envVarsSchema = joi.object({
     .default(3000),
 
   PRIVATE_KEY: joi.string()
-    .allow([""])
-    .default(""),
+    .required(),
 }).unknown()
   .required();
 
