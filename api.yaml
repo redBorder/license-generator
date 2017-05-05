@@ -15,6 +15,7 @@ info:
     name: GNU Affero General Public License
     url: https://www.gnu.org/licenses/agpl-3.0.txt
 
+host: crunner.redborder.lan:3000
 basePath: /api/v1
 schemes:
   - http
@@ -62,6 +63,10 @@ definitions:
         description: >
           UUID of the cluster where the license is allowed. One demo license
           per cluster is allwed.
+      organization_uuid:
+        type: string
+        description: >
+          UUID of the organization where the license is allowed.
 
   LicenseResponse:
     type: object

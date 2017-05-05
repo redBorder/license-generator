@@ -115,18 +115,28 @@ const fromValue = R.curry((key: string, value: any) => R.assoc(key, value, {}));
 //////////////
 
 // computeExpireTimestamp :: Date -> number
-export const computeExpireTimestamp = R.compose(getUnixEpoch, add30Days);
+export const computeExpireTimestamp = R.pipe(add30Days, getUnixEpoch);
 
-export const requestHandler = R.curry((opts, req, res) => {
+export const request = (req, res) => {
+  const ctx: IContext = req.ctx;
+  const cluster_uuid: string =
+    req.swagger.params.cluster_info.value.cluster_uuid;
+  const organization_uuid: string =
+    req.swagger.params.cluster_info.value.organization_uuid;
+
   R.pipe(
     R.pipe(
-      R.assocPath(["id"], req.swagger.params.cluster_info.value.cluster_uuid),
+      R.assocPath(["id"], cluster_uuid),
       R.assocPath(["info", "uuid"], uuid()),
-      R.assocPath(["info", "cluster_uuid"],
-        req.swagger.params.cluster_info.value.cluster_uuid),
-      R.assocPath(["info", "expire_at"], computeExpireTimestamp(new Date())),
+      R.assocPath(["info", "cluster_uuid"], cluster_uuid),
+      (license: any) => organization_uuid
+        ? R.assocPath(["info", "organization_uuid"], organization_uuid, license)
+        : license,
+      R.tap(console.log),
+      R.assocPath(["info", "expire_at"],
+        R.pipe(add30Days, getUnixEpoch)(new Date())),
       R.assocPath(["info", "limit_bytes"], 9223372036854775000),
-      R.assocPath(["info", "sensors"], opts.sensors),
+      R.assocPath(["info", "sensors"], ctx.sensors),
       R.assocPath(["created_at"], new Date().toISOString()),
     ),
 
