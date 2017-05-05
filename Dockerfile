@@ -9,4 +9,7 @@ ENV NODE_ENV production
 RUN npm install --production
 RUN npm run build
 
-ENTRYPOINT ["npm", "run", "app"]
+ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh .
+RUN chmod +x wait-for-it.sh
+
+ENTRYPOINT ./entrypoint.sh
