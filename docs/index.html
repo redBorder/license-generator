@@ -30,7 +30,7 @@
               </section> -->
           <h5>Schema Definitions</h5>
           <a href="#definition-LicenseRequest"> LicenseRequest </a>
-          <a href="#definition-EncodedLicense"> EncodedLicense </a>
+          <a href="#definition-LicenseResponse"> LicenseResponse </a>
           <a href="#definition-ErrorResponse"> ErrorResponse </a>
         </nav>
       </div>
@@ -62,7 +62,7 @@
                     </h5>
           
                     <h5>Response Content-Types:
-                      <span>application/json, text/html</span>
+                      <span>application/json</span>
                     </h5>
                   -->
                   <h5>Schemes:
@@ -120,7 +120,8 @@
                 <section>
                   <h5>Request Example</h5>
                   <div class="hljs"><pre><code class="lang-json">{
-  <span class="hljs-attr">&quot;cluster_uuid&quot;</span>: <span class="hljs-string">&quot;string&quot;</span>
+  <span class="hljs-attr">&quot;cluster_uuid&quot;</span>: <span class="hljs-string">&quot;string&quot;</span>,
+  <span class="hljs-attr">&quot;organization_uuid&quot;</span>: <span class="hljs-string">&quot;string&quot;</span>
 }
 </code></pre> </div>
                 </section>
@@ -134,7 +135,7 @@
                       <div class="prop-title">200 OK</div>
                       <div class="prop-ref">
                         <span class="">
-                          <a class="json-schema-ref" href="#/definitions/EncodedLicense">EncodedLicense</a>
+                          <a class="json-schema-ref" href="#/definitions/LicenseResponse">LicenseResponse</a>
                         </span>
                       </div>
                       <!-- <span class="swagger-global"></span> <span class="json-schema-reference"><a href=""></a></span> -->
@@ -164,7 +165,9 @@
                   <h5>Response Example
                     <span>(200 OK)</span>
                   </h5>
-                  <div class="hljs"><pre><code class="lang-json"><span class="hljs-string">&quot;string&quot;</span>
+                  <div class="hljs"><pre><code class="lang-json">{
+  <span class="hljs-attr">&quot;license&quot;</span>: <span class="hljs-string">&quot;string&quot;</span>
+}
 </code></pre> </div>
                 </section>
                 <section>
@@ -201,6 +204,14 @@
                     <dd>
                       <p>UUID of the cluster where the license is allowed. One demo license per cluster is allwed.</p>
                     </dd>
+                    <dt data-property-name="organization_uuid">
+                      <span class="json-property-name">organization_uuid:</span>
+                      <span class="json-property-type">string</span>
+                      <span class="json-property-range" title="Value limits"></span>
+                    </dt>
+                    <dd>
+                      <p>UUID of the organization where the license is allowed.</p>
+                    </dd>
                   </dl>
                 </section>
               </div>
@@ -208,31 +219,43 @@
                 <section>
                   <h5>Example</h5>
                   <div class="hljs"><pre><code class="lang-json">{
-  <span class="hljs-attr">&quot;cluster_uuid&quot;</span>: <span class="hljs-string">&quot;string&quot;</span>
+  <span class="hljs-attr">&quot;cluster_uuid&quot;</span>: <span class="hljs-string">&quot;string&quot;</span>,
+  <span class="hljs-attr">&quot;organization_uuid&quot;</span>: <span class="hljs-string">&quot;string&quot;</span>
 }
 </code></pre> </div>
                 </section>
               </div>
             </div>
           </div>
-          <div id="definition-EncodedLicense" class="definition panel" data-traverse-target="definition-EncodedLicense">
+          <div id="definition-LicenseResponse" class="definition panel" data-traverse-target="definition-LicenseResponse">
             <h2 class="panel-title">
-              <a name="/definitions/EncodedLicense"></a>EncodedLicense:
+              <a name="/definitions/LicenseResponse"></a>LicenseResponse:
               <span class="json-property-type">
-                <span class="json-property-type">string</span>
+                <span class="json-property-type">object</span>
                 <span class="json-property-range" title="Value limits"></span>
               </span>
             </h2>
             <div class="doc-row">
               <div class="doc-copy">
-                <section class="json-schema-description">
-                  <p>Base64 encoded license.</p>
+                <section class="json-schema-properties">
+                  <dl>
+                    <dt data-property-name="license">
+                      <span class="json-property-name">license:</span>
+                      <span class="json-property-type">string</span>
+                      <span class="json-property-range" title="Value limits"></span>
+                    </dt>
+                    <dd>
+                      <p>Base64 encoded license.</p>
+                    </dd>
+                  </dl>
                 </section>
               </div>
               <div class="doc-examples">
                 <section>
                   <h5>Example</h5>
-                  <div class="hljs"><pre><code class="lang-json"><span class="hljs-string">&quot;string&quot;</span>
+                  <div class="hljs"><pre><code class="lang-json">{
+  <span class="hljs-attr">&quot;license&quot;</span>: <span class="hljs-string">&quot;string&quot;</span>
+}
 </code></pre> </div>
                 </section>
               </div>
