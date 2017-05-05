@@ -128,6 +128,7 @@ export const request = (req, res) => {
     req.swagger.params.cluster_info.value.cluster_uuid;
   const organization_uuid: string =
     req.swagger.params.cluster_info.value.organization_uuid;
+  const logger = Maybe.toMaybe(ctx.logger);
 
   R.pipe(
     R.pipe(
@@ -149,7 +150,7 @@ export const request = (req, res) => {
     R.pipe(
       then(R.map(encodeInfo)),
       then(R.map(addSignature(ctx.key))),
-      then(R.chain(printLicense(ctx.logger))),
+      then(R.chain(printLicense(logger))),
       then(R.chain(storeOnDB(ctx.entity, ctx.dbConnection))),
       then(R.chain(
         R.pipe(
@@ -169,6 +170,6 @@ export const request = (req, res) => {
     ),
 
     then(runIO),
-    catchP(R.pipe(errorLog(ctx.logger), runIO)),
+    catchP(R.pipe(errorLog(logger), runIO)),
   )(new License());
 };

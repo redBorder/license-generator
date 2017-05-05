@@ -69,6 +69,20 @@ const config = {
   logger: {
     level: envVars.LOG_LEVEL,
   },
+  sensors: {
+    199: 100,
+    191: 100,
+    999: 100,
+    217: 100,
+    187: 100,
+    227: 100,
+    219: 100,
+    221: 100,
+    223: 100,
+    event: 100,
+    flow: 100,
+    social: 100,
+  },
 };
 
 export default config;

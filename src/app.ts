@@ -50,18 +50,8 @@ createConnection({
     dbConnection: connection,
     entity: License,
     key: config.key,
-    logger: Maybe.of(apiLogger),
-    sensors: {
-      199: 100,
-      191: 100,
-      999: 100,
-      217: 100,
-      187: 100,
-      227: 100,
-      219: 100,
-      221: 100,
-      223: 100,
-    },
+    logger: apiLogger,
+    sensors: config.sensors,
   };
 
   app.use((req: any, res, next) => {

@@ -206,7 +206,6 @@ class LicensesTest {
       ctx: {
         dbConnection: connection,
         key: new NodeRSA(privateKey),
-        logger: Maybe.Nothing(),
         sensors: SENSORS,
       },
       swagger: {
@@ -234,7 +233,6 @@ class LicensesTest {
       ctx: {
         dbConnection: connection,
         key: new NodeRSA(privateKey),
-        logger: Maybe.Nothing(),
         sensors: SENSORS,
       },
       swagger: {
