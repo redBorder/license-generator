@@ -110,12 +110,17 @@ export const storeOnDB: any = R.curry((entity, connection, license) =>
 // fromValue :: string -> any -> Object
 const fromValue = R.curry((key: string, value: any) => R.assoc(key, value, {}));
 
+// addOrganization :: string -> License -> License
+const addOrganization: any = R.curry(
+  (organization_uuid: string, license: License) =>
+    organization_uuid
+      ? R.assocPath(["info", "organization_uuid"], organization_uuid, license)
+      : license,
+);
+
 //////////////
 // Handlers //
 //////////////
-
-// computeExpireTimestamp :: Date -> number
-export const computeExpireTimestamp = R.pipe(add30Days, getUnixEpoch);
 
 export const request = (req, res) => {
   const ctx: IContext = req.ctx;
@@ -129,15 +134,12 @@ export const request = (req, res) => {
       R.assocPath(["id"], cluster_uuid),
       R.assocPath(["info", "uuid"], uuid()),
       R.assocPath(["info", "cluster_uuid"], cluster_uuid),
-      (license: any) => organization_uuid
-        ? R.assocPath(["info", "organization_uuid"], organization_uuid, license)
-        : license,
-      R.tap(console.log),
       R.assocPath(["info", "expire_at"],
         R.pipe(add30Days, getUnixEpoch)(new Date())),
       R.assocPath(["info", "limit_bytes"], 9223372036854775000),
       R.assocPath(["info", "sensors"], ctx.sensors),
       R.assocPath(["created_at"], new Date().toISOString()),
+      addOrganization(organization_uuid),
     ),
 
     findLicense(ctx.entity, ctx.dbConnection),

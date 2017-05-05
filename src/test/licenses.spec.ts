@@ -35,7 +35,7 @@ import {
   findLicense,
   getUnixEpoch,
   printLicense,
-  requestHandler,
+  request,
   safeURLBase64Encode,
   sendError,
   sendResponse,
@@ -65,6 +65,18 @@ const LICENSE = {
   signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
 };
 
+const SENSORS = {
+  199: 100,
+  191: 100,
+  999: 100,
+  217: 100,
+  187: 100,
+  227: 100,
+  219: 100,
+  221: 100,
+  223: 100,
+};
+
 @suite
 class LicensesTest {
 
@@ -80,13 +92,7 @@ class LicensesTest {
 
   @test("embed 'encoded_info' on a license")
   public encodeInfo() {
-    const baseLicense = {
-      encoded_info: "",
-      id: "0",
-      info: { uuid: "Hello world" },
-      signature: "",
-    };
-    const license = encodeInfo(baseLicense);
+    const license = encodeInfo(LICENSE);
     expect(license.encoded_info)
       .to.eq("eyJ1dWlkIjoiSGVsbG8gd29ybGQifQ==");
   }
@@ -197,18 +203,18 @@ class LicensesTest {
     const resMock = sinon.mock(res);
 
     const req = {
-      dbConnection: connection,
+      ctx: {
+        dbConnection: connection,
+        key: new NodeRSA(privateKey),
+        logger: Maybe.Nothing(),
+        sensors: SENSORS,
+      },
       swagger: {
         params: { cluster_info: { value: { cluster_uuid: "test_uuid" } } },
       },
     };
 
-    const opts = {
-      key: new NodeRSA(privateKey),
-      logger: Maybe.Nothing(),
-    };
-
-    requestHandler(opts, req, res);
+    request(req, res);
 
     resMock.verify();
   }
@@ -225,18 +231,18 @@ class LicensesTest {
     const resMock = sinon.mock(res);
 
     const req = {
-      dbConnection: connection,
+      ctx: {
+        dbConnection: connection,
+        key: new NodeRSA(privateKey),
+        logger: Maybe.Nothing(),
+        sensors: SENSORS,
+      },
       swagger: {
         params: { cluster_info: { value: { cluster_uuid: "test_uuid" } } },
       },
     };
 
-    const opts = {
-      key: new NodeRSA(privateKey),
-      logger: Maybe.Nothing(),
-    };
-
-    requestHandler(opts, req, res);
+    request(req, res);
 
     resMock.verify();
   }
