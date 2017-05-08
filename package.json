@@ -1,6 +1,6 @@
 {
   "name": "license-server",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Server for demo licenses generation using a REST API",
   "main": "dist/app.js",
   "scripts": {
