@@ -35,10 +35,10 @@ import {
   findLicense,
   getUnixEpoch,
   printLicense,
-  requestHandler,
+  request,
   safeURLBase64Encode,
   sendError,
-  sendLicense,
+  sendResponse,
   storeOnDB,
 } from "../api/controllers/licenses";
 
@@ -58,6 +58,25 @@ U9VQQSQzY1oZMVX8i1m5WUTLPz2yLJIBQVdXqhMCQBGoiuSoSjafUhV7i1cEGpb88h5NBYZzWXGZ
 37sJ5QsW+sJyoNde3xH8vdXhzU7eT82D6X/scw9RZz+/6rCJ4p0=
 -----END RSA PRIVATE KEY-----`;
 
+const LICENSE = {
+  encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
+  id: "0",
+  info: { uuid: "Hello world" },
+  signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
+};
+
+const SENSORS = {
+  199: 100,
+  191: 100,
+  999: 100,
+  217: 100,
+  187: 100,
+  227: 100,
+  219: 100,
+  221: 100,
+  223: 100,
+};
+
 @suite
 class LicensesTest {
 
@@ -73,13 +92,7 @@ class LicensesTest {
 
   @test("embed 'encoded_info' on a license")
   public encodeInfo() {
-    const baseLicense = {
-      encoded_info: "",
-      id: "0",
-      info: { uuid: "Hello world" },
-      signature: "",
-    };
-    const license = encodeInfo(baseLicense);
+    const license = encodeInfo(LICENSE);
     expect(license.encoded_info)
       .to.eq("eyJ1dWlkIjoiSGVsbG8gd29ybGQifQ==");
   }
@@ -87,14 +100,7 @@ class LicensesTest {
   @test("sign a license using a rsa key")
   public addSignature() {
     const key = new NodeRSA(privateKey);
-
-    const baseLicense = {
-      encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
-      id: "0",
-      info: { uuid: "Hello world" },
-      signature: "",
-    };
-    const license = addSignature(key, baseLicense);
+    const license = addSignature(key, LICENSE);
     expect(license.signature)
       .to.eq("NBLguIM2kdTig9ZnKfgFbY-Ghra4x4wu9akEoQrIbH8bC5btrpZekHcYLbAxPF" +
       "1pA8gCieU8v4uz9_C2jcjZJrPfqyLcgZmvGk27ZEiTO6uZQs_XwmwprYxuWpGHhFkRerM" +
@@ -115,36 +121,24 @@ class LicensesTest {
 
   @test("send a license")
   public sendLicense() {
-    const license = {
-      encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
-      id: "0",
-      info: { uuid: "Hello world" },
-      signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
-    };
     const res = { send: () => { return; } };
 
     const mock = sinon.mock(res);
-    mock.expects("send").calledWith(license);
+    mock.expects("send").calledWith(LICENSE);
 
-    sendLicense(res, license).runIO();
+    sendResponse(res, LICENSE).runIO();
 
     mock.verify();
   }
 
   @test("print a license")
   public printLicense() {
-    const license = {
-      encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
-      id: "0",
-      info: { uuid: "Hello world" },
-      signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
-    };
     const logger = { debug: () => { return; } };
 
     const mock = sinon.mock(logger);
-    mock.expects("debug").calledWith(license);
+    mock.expects("debug").calledWith(LICENSE);
 
-    printLicense(Maybe.of(logger), license).runIO();
+    printLicense(Maybe.of(logger), LICENSE).runIO();
 
     mock.verify();
   }
@@ -163,51 +157,38 @@ class LicensesTest {
 
   @test("find a license on the database which exists")
   public findLicenseFound() {
-    const license = {
-      encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
-      id: "0",
-      info: { uuid: "Hello world" },
-      signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
-    };
-
     const repository = {
-      findOneById: () => new Promise((resolve) => resolve(license)),
+      findOneById: () => new Promise((resolve) => resolve(LICENSE)),
     };
     const mock = sinon.mock(repository);
     const connection = { getRepository: () => repository };
 
-    expect(findLicense(undefined, connection, license).runIO())
-      .to.eventually.deep.equal(Either.Left(license));
+    expect(findLicense(undefined, connection, LICENSE).runIO())
+      .to.eventually.deep.equal(Either.Left(LICENSE));
   }
 
   @test("find a license on the database which does not exists")
   public findLicenseNotFound() {
-    const license = {
-      encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
-      id: "0",
-      info: { uuid: "Hello world" },
-      signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
-    };
     const repository = {
       findOneById: () => new Promise((resolve) => resolve(undefined)),
     };
     const mock = sinon.mock(repository);
     const connection = { getRepository: () => repository };
 
-    expect(findLicense(undefined, connection, license).runIO())
-      .to.eventually.deep.equal(Either.Right(license));
+    expect(findLicense(undefined, connection, LICENSE).runIO())
+      .to.eventually.deep.equal(Either.Right(LICENSE));
   }
 
   @test("store a license on the database")
   public storeOnDB() {
     const repository = {
-      persist: () => new Promise((resolve) => resolve(42)),
+      persist: () => new Promise((resolve) => resolve()),
     };
     const mock = sinon.mock(repository);
     const connection = { getRepository: () => repository };
 
-    expect(storeOnDB(undefined, connection, undefined).runIO())
-      .to.eventually.equal(42);
+    expect(storeOnDB(undefined, connection, LICENSE).runIO())
+      .deep.equal(LICENSE);
   }
 
   @test("handle a request from a new cluster")
@@ -222,33 +203,26 @@ class LicensesTest {
     const resMock = sinon.mock(res);
 
     const req = {
-      dbConnection: connection,
+      ctx: {
+        dbConnection: connection,
+        key: new NodeRSA(privateKey),
+        sensors: SENSORS,
+      },
       swagger: {
         params: { cluster_info: { value: { cluster_uuid: "test_uuid" } } },
       },
     };
 
-    const opts = {
-      key: new NodeRSA(privateKey),
-      logger: Maybe.Nothing(),
-    };
-
-    requestHandler(opts, req, res);
+    request(req, res);
 
     resMock.verify();
   }
 
   @test("handle a request from the same cluster")
   public requestAgain() {
-    const license = {
-      encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
-      id: "0",
-      info: { uuid: "Hello world" },
-      signature: "C3g6DVIoEldLG53Dr1Ofj_JiCg_9ONyuXEVE1PeM",
-    };
     const repository = {
-      findOneById: () => new Promise((resolve) => resolve(license)),
-      persist: () => new Promise((resolve) => resolve(42)),
+      findOneById: () => new Promise((resolve) => resolve(LICENSE)),
+      persist: () => new Promise((resolve) => resolve()),
     };
     const connection = { getRepository: () => repository };
     const repositoryMock = sinon.mock(repository);
@@ -256,18 +230,17 @@ class LicensesTest {
     const resMock = sinon.mock(res);
 
     const req = {
-      dbConnection: connection,
+      ctx: {
+        dbConnection: connection,
+        key: new NodeRSA(privateKey),
+        sensors: SENSORS,
+      },
       swagger: {
         params: { cluster_info: { value: { cluster_uuid: "test_uuid" } } },
       },
     };
 
-    const opts = {
-      key: new NodeRSA(privateKey),
-      logger: Maybe.Nothing(),
-    };
-
-    requestHandler(opts, req, res);
+    request(req, res);
 
     resMock.verify();
   }

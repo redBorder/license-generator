@@ -42,8 +42,7 @@ const envVarsSchema = joi.object({
     .default(3000),
 
   PRIVATE_KEY: joi.string()
-    .allow([""])
-    .default(""),
+    .required(),
 }).unknown()
   .required();
 
@@ -69,6 +68,20 @@ const config = {
     new NodeRSA(envVars.PRIVATE_KEY.replace(/\\n/g, "\n")) : undefined,
   logger: {
     level: envVars.LOG_LEVEL,
+  },
+  sensors: {
+    199: 100,
+    191: 100,
+    999: 100,
+    217: 100,
+    187: 100,
+    227: 100,
+    219: 100,
+    221: 100,
+    223: 100,
+    event: 100,
+    flow: 100,
+    social: 100,
   },
 };
 

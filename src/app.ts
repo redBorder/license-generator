@@ -17,14 +17,19 @@
 
 import * as express from "express";
 import * as log4js from "log4js";
+import * as rambdaFantasy from "ramda-fantasy";
 import "reflect-metadata";
 import * as SwaggerExpress from "swagger-express-mw";
 import { createConnection } from "typeorm";
 import { License } from "./entity/license";
+import { IContext } from "./util";
 
 import config from "./config";
 
-const logger = log4js.getLogger("[app]");
+const Maybe = rambdaFantasy.Maybe;
+
+const appLogger = log4js.getLogger("[app]");
+const apiLogger = log4js.getLogger("[api]");
 const app = express();
 
 createConnection({
@@ -39,10 +44,18 @@ createConnection({
   },
   entities: [License],
 }).then((connection) => {
-  logger.info("Connected to the database");
+  appLogger.info("Connected to the database");
+
+  const ctx: IContext = {
+    dbConnection: connection,
+    entity: License,
+    key: config.key,
+    logger: apiLogger,
+    sensors: config.sensors,
+  };
 
   app.use((req: any, res, next) => {
-    req.dbConnection = connection;
+    req.ctx = ctx;
     next();
   });
 
@@ -51,8 +64,8 @@ createConnection({
 
     swaggerExpress.register(app);
     app.listen(config.api.port, () =>
-      logger.info(`Listen on ${config.api.port}`));
+      appLogger.info(`Listen on ${config.api.port}`));
   });
-}).catch((error) => logger.error(error));
+}).catch((error) => appLogger.error(error));
 
 export default app;

@@ -6,7 +6,7 @@ info:
 
     The API can be used to request demo licenses valid for 30 days for a
     cluster. **Only one license per cluster is allowed**.
-  version: 0.1.0
+  version: 0.3.0
   contact:
     name: redborder
     url: https://redborder.com
@@ -15,10 +15,10 @@ info:
     name: GNU Affero General Public License
     url: https://www.gnu.org/licenses/agpl-3.0.txt
 
+host: licenses.redborder.com
 basePath: /api/v1
 schemes:
   - http
-  - https
 consumes:
   - application/json
 produces:
@@ -45,7 +45,7 @@ paths:
         "200":
           description: Success
           schema:
-            $ref: "#/definitions/License"
+            $ref: "#/definitions/LicenseResponse"
         default:
           description: Error
           schema:
@@ -62,42 +62,17 @@ definitions:
         description: >
           UUID of the cluster where the license is allowed. One demo license
           per cluster is allwed.
-
-  License:
-    type: object
-    properties:
-      Info:
-        $ref: '#/definitions/LicenseInfo'
-      encoded_info:
+      organization_uuid:
         type: string
-        description: The field "info" encoded on base64.
-      signature:
-        type: string
-        description: The signature of the "encoded_info" field encoded on base64.
-      created_at:
-        type: string
-        description: When the license was generated.
-
-  LicenseInfo:
-    type: object
-    properties:
-      uuid:
-        type: string
-        description: UUID of the license.
-      cluster_uuid:
-        type: string
-        description: UUID of the cluster where the license is allowed.
-      expire_at:
-        type: string
-        description: Unix timestamp indicating when the license expires.
-      limit_bytes:
-        type: integer
-        description: Max number of bytes allowed to send every period.
-      sensors:
-        type: object
         description: >
-          Map with the number of sensors allowed for every model in
-          the form of "<sensor_id>":<number of sensos allowed>.
+          UUID of the organization where the license is allowed.
+
+  LicenseResponse:
+    type: object
+    properties:
+      license:
+        type: string
+        description: Base64 encoded license.
 
   ErrorResponse:
     type: object
