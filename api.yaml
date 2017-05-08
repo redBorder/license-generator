@@ -15,11 +15,10 @@ info:
     name: GNU Affero General Public License
     url: https://www.gnu.org/licenses/agpl-3.0.txt
 
-host: crunner.redborder.lan:3000
+host: licenses.redborder.com
 basePath: /api/v1
 schemes:
   - http
-  - https
 consumes:
   - application/json
 produces:
