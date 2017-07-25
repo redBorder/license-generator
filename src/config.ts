@@ -82,6 +82,7 @@ const config = {
     event: 100,
     flow: 100,
     social: 100,
+    vault: 100,
   },
 };
 
