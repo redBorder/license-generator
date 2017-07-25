@@ -1,0 +1,84 @@
+swagger: "2.0"
+info:
+  title: License generator
+  description: >
+    redborder license generator API.
+
+    The API can be used to request demo licenses valid for 30 days for a
+    cluster. **Only one license per cluster is allowed**.
+  version: 0.4.0
+  contact:
+    name: redborder
+    url: https://redborder.com
+    email: info@redborder.com
+  license:
+    name: GNU Affero General Public License
+    url: https://www.gnu.org/licenses/agpl-3.0.txt
+
+host: licenses.redborder.com
+basePath: /api/v1
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+tags:
+  - name: License
+    description: Manage licenses
+
+paths:
+  /licenses:
+    x-swagger-router-controller: licenses
+    post:
+      tags: [License]
+      summary: Request demo license
+      operationId: request
+      parameters:
+        - name: cluster_info
+          in: body
+          description: Request a demo license valid for 30 days for a cluster.
+          required: true
+          schema:
+            $ref: "#/definitions/LicenseRequest"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/LicenseResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+definitions:
+  LicenseRequest:
+    type: object
+    required:
+      - cluster_uuid
+    properties:
+      cluster_uuid:
+        type: string
+        description: >
+          UUID of the cluster where the license is allowed. One demo license
+          per cluster is allwed.
+      organization_uuid:
+        type: string
+        description: >
+          UUID of the organization where the license is allowed.
+
+  LicenseResponse:
+    type: object
+    properties:
+      license:
+        type: string
+        description: Base64 encoded license.
+
+  ErrorResponse:
+    type: object
+    required:
+      - message
+    properties:
+      message:
+        type: string
+        description: Information about the error.
