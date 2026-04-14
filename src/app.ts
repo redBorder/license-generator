@@ -15,11 +15,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import "./polyfills";
 import * as express from "express";
 import * as log4js from "log4js";
 import * as rambdaFantasy from "ramda-fantasy";
 import "reflect-metadata";
 import * as SwaggerExpress from "swagger-express-mw";
+import * as util from "util";
 import { createConnection } from "typeorm";
 import { License } from "./entity/license";
 import { IContext } from "./util";
@@ -60,12 +62,17 @@ createConnection({
   });
 
   SwaggerExpress.create(config.api, (err, swaggerExpress) => {
-    if (err) { throw err; }
+    if (err) {
+      appLogger.error("SwaggerExpress.create error:", util.inspect(err, { depth: null }));
+      throw err;
+    }
 
     swaggerExpress.register(app);
     app.listen(config.api.port, () =>
       appLogger.info(`Listen on ${config.api.port}`));
   });
-}).catch((error) => appLogger.error(error));
+}).catch((error) => {
+  appLogger.error("General error:", util.inspect(error, { depth: null }));
+});
 
 export default app;

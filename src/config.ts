@@ -17,6 +17,7 @@
 
 import * as joi from "joi";
 import * as NodeRSA from "node-rsa";
+import * as path from "path";
 
 const envVarsSchema = joi.object({
   DB_DATABASE: joi.string()
@@ -51,8 +52,8 @@ if (error) { throw new Error(`Config validation error: ${error.message}`); }
 
 const config = {
   api: {
-    appRoot: ".",
-    configDir: ".",
+    appRoot: path.join(__dirname, ".."),
+    configDir: "config",
     port: envVars.PORT,
     swaggerFile: "api.yaml",
   },
@@ -83,6 +84,14 @@ const config = {
     flow: 100,
     social: 100,
     vault: 100,
+    scanner: 100,
+    mse: 100,
+    meraki: 100,
+    ale: 100,
+    arubacentral: 100,
+    snmp: 100,
+    ipmi: 100,
+    redfish: 100,
   },
 };
 

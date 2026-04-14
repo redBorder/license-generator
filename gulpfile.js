@@ -3,13 +3,15 @@ const ts = require('gulp-typescript');
 
 const tsProject = ts.createProject('tsconfig.json');
 
-gulp.task('build', () => {
+function build() {
   const tsResult = tsProject.src().pipe(tsProject());
   return tsResult.js.pipe(gulp.dest('dist'));
-});
+}
 
-gulp.task('watch', ['scripts'], () => {
-  gulp.watch('src/**/*.ts', ['scripts']);
-});
+function watch() {
+  gulp.watch('src/**/*.ts', build);
+}
 
-gulp.task('default', ['build']);
+exports.build = build;
+exports.watch = watch;
+exports.default = build;
