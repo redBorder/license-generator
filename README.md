@@ -76,7 +76,7 @@ services:
     image: mariadb:11
     environment:
       - MYSQL_DATABASE=licenses
-      - MYSQL_ROOT_PASSWORD=qwerty
+      - MYSQL_ROOT_PASSWORD=redborder
 ```
 
 ## Usage
