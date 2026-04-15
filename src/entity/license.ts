@@ -15,25 +15,31 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import config from "../config";
-
 import { Column, Entity, PrimaryColumn } from "typeorm";
 
 interface IInfo {
   uuid: string;
+  cluster_uuid: string;
+  expire_at: number;
+  limit_bytes: number;
+  sensors: object;
+  organization_uuid?: string;
 }
 
 @Entity()
 export class License {
-  @PrimaryColumn("string")
-  public id: string;
+  @PrimaryColumn()
+  public id!: string;
 
-  // @Column()
-  public info: IInfo;
+  @Column("simple-json")
+  public info!: IInfo;
 
-  // @Column("text")
-  public encoded_info: string;
+  @Column("text")
+  public encoded_info!: string;
 
-  // @Column()
-  public signature: string;
+  @Column("text")
+  public signature!: string;
+
+  @Column()
+  public created_at!: string;
 }

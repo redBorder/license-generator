@@ -15,9 +15,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import * as joi from "joi";
-import * as NodeRSA from "node-rsa";
-import * as path from "path";
+import joi from "joi";
+import NodeRSA from "node-rsa";
+import fs from "fs";
+import path from "path";
 
 const envVarsSchema = joi.object({
   DB_DATABASE: joi.string()
@@ -26,33 +27,36 @@ const envVarsSchema = joi.object({
     .default("mariadb"),
   DB_PASSWORD: joi.string()
     .default("qwerty"),
-  DB_PORT: joi.string()
+  DB_PORT: joi.number()
     .default(3306),
   DB_USERNAME: joi.string()
     .default("root"),
 
   LOG_LEVEL: joi.string()
-    .allow(["error", "warn", "info", "debug", "trace"])
+    .allow("error", "warn", "info", "debug", "trace")
     .default("info"),
 
   NODE_ENV: joi.string()
-    .allow(["development", "production", "test"])
+    .allow("development", "production", "test")
     .default("development"),
 
   PORT: joi.number()
     .default(3000),
 
   PRIVATE_KEY: joi.string()
-    .required(),
+    .allow(""),
 }).unknown()
   .required();
 
-const { error, value: envVars } = joi.validate(process.env, envVarsSchema);
+const { error, value: envVars } = envVarsSchema.validate(process.env);
 if (error) { throw new Error(`Config validation error: ${error.message}`); }
+
+const licenseConfigPath = path.join(process.cwd(), "config", "license.json");
+const licenseConfig = JSON.parse(fs.readFileSync(licenseConfigPath, "utf-8"));
 
 const config = {
   api: {
-    appRoot: path.join(__dirname, ".."),
+    appRoot: process.cwd(),
     configDir: "config",
     port: envVars.PORT,
     swaggerFile: "api.yaml",
@@ -70,29 +74,8 @@ const config = {
   logger: {
     level: envVars.LOG_LEVEL,
   },
-  sensors: {
-    199: 100,
-    191: 100,
-    999: 100,
-    217: 100,
-    187: 100,
-    227: 100,
-    219: 100,
-    221: 100,
-    223: 100,
-    event: 100,
-    flow: 100,
-    social: 100,
-    vault: 100,
-    scanner: 100,
-    mse: 100,
-    meraki: 100,
-    ale: 100,
-    arubacentral: 100,
-    snmp: 100,
-    ipmi: 100,
-    redfish: 100,
-  },
+  sensors: licenseConfig.sensors,
+  valid_days: licenseConfig.valid_days || 30,
 };
 
 export default config;

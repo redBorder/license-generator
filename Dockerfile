@@ -4,7 +4,7 @@ WORKDIR /app/
 
 COPY . /app/
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 RUN apk update && apk add --no-cache git bash
 
@@ -14,4 +14,4 @@ RUN npm run build
 ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh .
 RUN chmod +x wait-for-it.sh
 
-ENTRYPOINT /app/entrypoint.sh
+ENTRYPOINT ["/app/entrypoint.sh"]

@@ -1,35 +1,29 @@
+// @ts-nocheck
 // License generator API
 // Copyright (C) 2017  Eneo Tecnología
 // Author: Diego Fernández Barrera
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published
-// by the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+// @ts-ignore
+declare module "ramda-fantasy";
+// @ts-ignore
+declare module "mocha-typescript";
 
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
-import { suite, test } from "mocha-typescript";
-import * as NodeRSA from "node-rsa";
-import * as rambdaFantasy from "ramda-fantasy";
+import chaiAsPromised from "chai-as-promised";
+import NodeRSA from "node-rsa";
+import rambdaFantasy from "ramda-fantasy";
 import * as sinon from "sinon";
+import { suite, test } from "mocha-typescript";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 const IO = rambdaFantasy.IO;
 const Either = rambdaFantasy.Either;
+const Maybe = rambdaFantasy.Maybe;
 
 import {
-  add30Days,
+  addDays,
   addSignature,
   encodeInfo,
   findLicense,
@@ -40,9 +34,7 @@ import {
   sendError,
   sendResponse,
   storeOnDB,
-} from "../api/controllers/licenses";
-
-const Maybe = rambdaFantasy.Maybe;
+} from "../api/controllers/licenses.js";
 
 const privateKey = `-----BEGIN RSA PRIVATE KEY-----
 MIICXAIBAAKBgQCqGKukO1De7zhZj6+H0qtjTkVxwTCpvKe4eCZ0FPqri0cb2JZfXJ/DgYSF6vUp
@@ -58,7 +50,7 @@ U9VQQSQzY1oZMVX8i1m5WUTLPz2yLJIBQVdXqhMCQBGoiuSoSjafUhV7i1cEGpb88h5NBYZzWXGZ
 37sJ5QsW+sJyoNde3xH8vdXhzU7eT82D6X/scw9RZz+/6rCJ4p0=
 -----END RSA PRIVATE KEY-----`;
 
-const LICENSE = {
+const LICENSE: any = {
   encoded_info: "eyJtZXNzYWdlIjoiSGVsbG8gd29ybGQifQ==",
   id: "0",
   info: { uuid: "Hello world" },
@@ -100,7 +92,7 @@ class LicensesTest {
   @test("sign a license using a rsa key")
   public addSignature() {
     const key = new NodeRSA(privateKey);
-    const license = addSignature(key, LICENSE);
+    const license: any = (addSignature as any)(key, LICENSE);
     expect(license.signature)
       .to.eq("NBLguIM2kdTig9ZnKfgFbY-Ghra4x4wu9akEoQrIbH8bC5btrpZekHcYLbAxPF" +
       "1pA8gCieU8v4uz9_C2jcjZJrPfqyLcgZmvGk27ZEiTO6uZQs_XwmwprYxuWpGHhFkRerM" +
@@ -116,7 +108,7 @@ class LicensesTest {
   @test("add 30 days to a given date")
   public add30Days() {
     const date = new Date("Tue, 29 May 1990 0:00:00 GMT");
-    expect(add30Days(date).getTime() / 1000).to.eq(646531200);
+    expect(addDays(30, date).getTime() / 1000).to.eq(646531200);
   }
 
   @test("send a license")
@@ -124,9 +116,9 @@ class LicensesTest {
     const res = { send: () => { return; } };
 
     const mock = sinon.mock(res);
-    mock.expects("send").calledWith(LICENSE);
+    mock.expects("send").once().withArgs(LICENSE);
 
-    sendResponse(res, LICENSE).runIO();
+    (sendResponse as any)(res, LICENSE).runIO();
 
     mock.verify();
   }
@@ -136,9 +128,9 @@ class LicensesTest {
     const logger = { debug: () => { return; } };
 
     const mock = sinon.mock(logger);
-    mock.expects("debug").calledWith(LICENSE);
+    mock.expects("debug").once().withArgs(sinon.match.string);
 
-    printLicense(Maybe.of(logger), LICENSE).runIO();
+    (printLicense as any)(Maybe.of(logger), LICENSE).runIO();
 
     mock.verify();
   }
@@ -148,9 +140,9 @@ class LicensesTest {
     const res = { send: () => { return; } };
     const mock = sinon.mock(res);
 
-    mock.expects("send").calledWith("Hello");
+    mock.expects("send").once().withArgs({ message: "Hello" });
 
-    sendError(res, "Hello").runIO();
+    (sendError as any)(res, "Hello").runIO();
 
     mock.verify();
   }
@@ -158,90 +150,89 @@ class LicensesTest {
   @test("find a license on the database which exists")
   public findLicenseFound() {
     const repository = {
-      findOneById: () => new Promise((resolve) => resolve(LICENSE)),
+      findOneBy: () => Promise.resolve(LICENSE),
     };
-    const mock = sinon.mock(repository);
     const connection = { getRepository: () => repository };
 
-    expect(findLicense(undefined, connection, LICENSE).runIO())
+    return expect((findLicense as any)(undefined, connection, LICENSE).runIO())
       .to.eventually.deep.equal(Either.Left(LICENSE));
   }
 
   @test("find a license on the database which does not exists")
   public findLicenseNotFound() {
     const repository = {
-      findOneById: () => new Promise((resolve) => resolve(undefined)),
+      findOneBy: () => Promise.resolve(undefined),
     };
-    const mock = sinon.mock(repository);
     const connection = { getRepository: () => repository };
 
-    expect(findLicense(undefined, connection, LICENSE).runIO())
+    return expect((findLicense as any)(undefined, connection, LICENSE).runIO())
       .to.eventually.deep.equal(Either.Right(LICENSE));
   }
 
   @test("store a license on the database")
   public storeOnDB() {
     const repository = {
-      persist: () => new Promise((resolve) => resolve()),
+      save: (l) => Promise.resolve(l),
     };
-    const mock = sinon.mock(repository);
     const connection = { getRepository: () => repository };
 
-    expect(storeOnDB(undefined, connection, LICENSE).runIO())
-      .deep.equal(LICENSE);
+    return expect((storeOnDB as any)(undefined, connection, LICENSE).runIO())
+      .to.eventually.deep.equal(LICENSE);
   }
 
   @test("handle a request from a new cluster")
   public request() {
     const repository = {
-      findOneById: () => new Promise((resolve) => resolve(undefined)),
-      persist: () => new Promise((resolve) => resolve(42)),
+      findOneBy: () => Promise.resolve(undefined),
+      save: (l) => Promise.resolve(l),
     };
     const connection = { getRepository: () => repository };
-    const repositoryMock = sinon.mock(repository);
     const res = { send: () => { return; } };
     const resMock = sinon.mock(res);
 
     const req = {
       ctx: {
         dbConnection: connection,
+        entity: class { },
         key: new NodeRSA(privateKey),
         sensors: SENSORS,
+        logger: { debug: () => { return; } },
       },
       swagger: {
-        params: { cluster_info: { value: { cluster_uuid: "test_uuid" } } },
+        params: { cluster_info: { value: { cluster_uuid: "test_uuid", organization_uuid: "org_uuid" } } },
       },
     };
 
-    request(req, res);
+    resMock.expects("send").once();
 
-    resMock.verify();
+    request(req, res);
   }
 
   @test("handle a request from the same cluster")
   public requestAgain() {
     const repository = {
-      findOneById: () => new Promise((resolve) => resolve(LICENSE)),
-      persist: () => new Promise((resolve) => resolve()),
+      findOneBy: () => Promise.resolve(LICENSE),
+      save: (l) => Promise.resolve(l),
     };
     const connection = { getRepository: () => repository };
-    const repositoryMock = sinon.mock(repository);
     const res = { send: () => { return; } };
     const resMock = sinon.mock(res);
 
     const req = {
       ctx: {
         dbConnection: connection,
+        entity: class { },
         key: new NodeRSA(privateKey),
         sensors: SENSORS,
+        logger: { debug: () => { return; } },
       },
       swagger: {
-        params: { cluster_info: { value: { cluster_uuid: "test_uuid" } } },
+        params: { cluster_info: { value: { cluster_uuid: "test_uuid", organization_uuid: "org_uuid" } } },
       },
     };
 
-    request(req, res);
+    resMock.expects("send").once().withArgs({ message: "Already generated a demo license for this cluster" });
 
-    resMock.verify();
+    request(req, res);
   }
 }

@@ -1,4 +1,6 @@
-import * as util from "util";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const util = require("util");
 
 const isObject = (arg: any) => typeof arg === "object" && arg !== null;
 
@@ -14,19 +16,19 @@ const polyfills: any = {
 };
 
 // These might already be present in some environments, but better safe.
-if (!(util as any).isError) {
-  (util as any).isError = (arg: any): arg is Error => arg instanceof Error;
+if (!util.isError) {
+  util.isError = (arg: any): arg is Error => arg instanceof Error;
 }
-if (!(util as any).isArray) {
-  (util as any).isArray = Array.isArray;
+if (!util.isArray) {
+  util.isArray = Array.isArray;
 }
-if (!(util as any).isRegExp) {
-  (util as any).isRegExp = (arg: any): arg is RegExp =>
+if (!util.isRegExp) {
+  util.isRegExp = (arg: any): arg is RegExp =>
     Object.prototype.toString.call(arg) === "[object RegExp]";
 }
 
 Object.keys(polyfills).forEach((key) => {
-  if (!(util as any)[key]) {
-    (util as any)[key] = polyfills[key];
+  if (!util[key]) {
+    util[key] = polyfills[key];
   }
 });
