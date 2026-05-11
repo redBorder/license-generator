@@ -1,0 +1,26 @@
+{
+  "valid_days": 30,
+  "sensors": {
+    "199": 1,
+    "191": 1,
+    "999": 1,
+    "217": 1,
+    "187": 1,
+    "227": 1,
+    "219": 1,
+    "221": 1,
+    "223": 1,
+    "event": 1,
+    "flow": 10,
+    "social": 1,
+    "vault": 10,
+    "scanner": 10,
+    "mse": 1,
+    "meraki": 1,
+    "ale": 1,
+    "arubacentral": 1,
+    "snmp": 1,
+    "ipmi": 1,
+    "redfish": 1
+  }
+}

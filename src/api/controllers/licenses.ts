@@ -16,13 +16,13 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import * as R from "ramda";
-import * as rambdaFantasy from "ramda-fantasy";
-import * as SwaggerExpress from "swagger-express-mw";
+import rambdaFantasy from "ramda-fantasy";
 import * as util from "util";
-import * as uuid from "uuid/v4";
+import { v4 as uuidv4 } from "uuid";
 
-import { License } from "../../entity/license";
-import { catchP, errorLog, IContext, runIO, then } from "../../util";
+import { License } from "../../entity/license.js";
+import { catchP, errorLog, IContext, runIO, then } from "../../util.js";
+import config from "../../config.js";
 
 const IO = rambdaFantasy.IO;
 const Maybe = rambdaFantasy.Maybe;
@@ -34,7 +34,7 @@ const Either = rambdaFantasy.Either;
 
 // safeURLBase64Encode :: string -> string
 export const safeURLBase64Encode = (data: string): string =>
-  new Buffer(data)
+  Buffer.from(data)
     .toString("base64")
     .replace(/\//g, "_")
     .replace(/\+/g, "-");
@@ -60,13 +60,18 @@ export const sendResponse = R.curry((res, message) => IO(() => {
 }));
 
 // sendError :: Responder -> License -> IO License
-export const sendError = R.curry((res, error: string) => IO(() =>
-  res.send({ message: error }),
-));
+export const sendError = R.curry((res, error: string) => IO(() => {
+  console.log(`\nAPI Error: ${error}`);
+  return res.send({ message: error }), error;
+}));
 
 // printLicense :: Logger -> License -> IO License
 export const printLicense = R.curry((maybeLogger, license: License) =>
   IO(() => {
+    console.log(`\nGenerated new license for cluster: ${license.id}`);
+    console.log(`License info: ${JSON.stringify(license.info)}`);
+    console.log(`Signature (first 10 chars): ${license.signature.substring(0, 10)}...\n`);
+    
     maybeLogger.map((log) =>
       log.debug(
         `Generated new license: \n${util.inspect(license, { colors: true })}`,
@@ -77,12 +82,8 @@ export const printLicense = R.curry((maybeLogger, license: License) =>
 );
 
 // addDays :: number -> Date -> Date
-export const addDays = R.curry((days: number, date: Date): Date =>
-  new Date((date.getTime() / 1000 + 60 * 60 * 24 * days) * 1000),
-);
-
-// add30Days :: Date -> Date
-export const add30Days: any = addDays(30);
+export const addDays = (days: number, date: Date): Date =>
+  new Date((date.getTime() / 1000 + 60 * 60 * 24 * days) * 1000);
 
 // getUnixEpoch :: Date -> number
 export const getUnixEpoch = (date: Date): number =>
@@ -91,19 +92,18 @@ export const getUnixEpoch = (date: Date): number =>
 // findLicense :: DBConnection -> string -> IO Promise(Either(Entity, Entity))
 export const findLicense = R.curry((entity, connection, license: License) =>
   IO(() => {
-    return new Promise((resolve, reject) =>
-      connection
-        .getRepository(entity)
-        .findOneById(license.id)
-        .then((exists) =>
-          resolve(exists ? Either.Left(license) : Either.Right(license)))
-        .catch(reject));
+    return connection
+      .getRepository(entity)
+      .findOneBy({ id: license.id })
+      .then((exists) =>
+        exists ? Either.Left(license) : Either.Right(license));
   }));
 
 // storeOnDb :: Entity -> DBConnection -> License -> IO Promise(License)
 export const storeOnDB: any = R.curry((entity, connection, license) =>
   IO(() => {
-    return connection.getRepository(entity).persist(license), license;
+    connection.getRepository(entity).save(license);
+    return license;
   }),
 );
 
@@ -133,10 +133,10 @@ export const request = (req, res) => {
   R.pipe(
     R.pipe(
       R.assocPath(["id"], cluster_uuid),
-      R.assocPath(["info", "uuid"], uuid()),
+      R.assocPath(["info", "uuid"], uuidv4()),
       R.assocPath(["info", "cluster_uuid"], cluster_uuid),
       R.assocPath(["info", "expire_at"],
-        R.pipe(add30Days, getUnixEpoch)(new Date())),
+        getUnixEpoch(addDays(config.valid_days, new Date()))),
       R.assocPath(["info", "limit_bytes"], 9223372036854775000),
       R.assocPath(["info", "sensors"], ctx.sensors),
       R.assocPath(["created_at"], new Date().toISOString()),
