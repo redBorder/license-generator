@@ -1,5 +1,5 @@
 swagger:
-  fittingsDirs: [ api/fittings ]
+  fittingsDirs: []
   defaultPipe: null
   swaggerControllerPipe: swagger_controllers
 
@@ -15,9 +15,10 @@ swagger:
       validateResponse: true
 
     swagger_controllers:
-      - onError: json_error_handler
+      - json_error_handler
       - cors
       - swagger_security
+      - swagger_params_parser
       - _swagger_validate
       - express_compatibility
       - _router

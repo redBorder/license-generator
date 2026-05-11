@@ -1,7 +1,21 @@
 language: node_js
 
 node_js:
-  - "7"
+  - "20"
+  - "22"
+
+services:
+  - mariadb
+
+before_script:
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS licenses;'
+
+env:
+  global:
+    - DB_HOST=127.0.0.1
+    - DB_DATABASE=licenses
+    - DB_USERNAME=root
+    - PRIVATE_KEY="some-dummy-key-for-testing"
 
 branches:
   only:

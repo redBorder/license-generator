@@ -23,39 +23,60 @@ npm run build
 
 ### Configuration
 
-The configuration is done using environment variables:
+The configuration is done using environment variables and a JSON file:
 
+#### Environment Variables
 - `DB_DATABASE ("licenses")`: Name of the database.
 - `DB_HOST ("mariadb")`: Hostname where the database is running.
 - `DB_PASSWORD ("qwerty")`: Password for the database connection.
 - `DB_PORT (3306)`: Port for the connection to the database.
 - `DB_USERNAME ("root")`: Username for the connection to the database.
 - `LOG_LEVEL ("info")`: Allowed: ["error", "warn", "info", "debug", "trace"].
-- `PORT (3000)`: Por to listen for HTTP connections.
-- `PRIVATE_KEY ("")`: Private key for signing licenses. Should be on PEM format
-and must be separate by '\n' chars. Example:
-```
------BEGIN RSA PRIVATE KEY-----\nMIICXAIBAAKBgQCqGKukO1De7zhZj6+H0qtjTkVxwTCpvKe4eCZ0FPqri0cb2JZfXJ/DgYSF6vUp\n...
+- `PORT (3000)`: Port to listen for HTTP connections.
+- `PRIVATE_KEY ("")`: Private key for signing licenses. Should be in PEM format.
+
+#### Dynamic License Configuration (`config/license.json`)
+You can customize the generated licenses by modifying `config/license.json`. This file is loaded at runtime:
+
+- `valid_days`: Duration of the generated license (default: 30 days).
+- `sensors`: A dictionary of sensor IDs and their respective counts.
+
+Example `config/license.json`:
+```json
+{
+  "valid_days": 30,
+  "sensors": {
+    "199": 100,
+    "191": 100,
+    "flow": 100,
+    "vault": 100
+  }
+}
 ```
 
 ### Using Docker
 
-Running with docker compose:
+The project is fully modernized for Node.js 22+ and ESM. Running with docker compose:
 
 ```yaml
-version: '2'
+version: '3.8'
 
 services:
   server:
-    image: redborder/license-generator
+    image: redborder/license-generator:0.5.0
     environment:
+      - DB_PASSWORD=redborder
       - PRIVATE_KEY="<your private key here>"
+    volumes:
+      - ./config/license.json:/app/config/license.json:ro
+    ports:
+      - "80:3000"
 
   mariadb:
-    image: mariadb
+    image: mariadb:11
     environment:
-      - MYSQL_DATABASE="licenses"
-      - MYSQL_ROOT_PASSWORD=qwerty
+      - MYSQL_DATABASE=licenses
+      - MYSQL_ROOT_PASSWORD=redborder
 ```
 
 ## Usage
