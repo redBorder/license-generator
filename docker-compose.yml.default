@@ -16,6 +16,7 @@ services:
 
   mariadb:
     image: mariadb
+    restart: always
     volumes:
       - ./mariadb/:/etc/mysql/conf.d
     environment:
